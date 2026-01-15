@@ -242,13 +242,17 @@ function displayUncontested() {
         });
     });
 
-    // Filter to only show Littles with exactly one request and not already claimed
+    // Filter to only show Littles with exactly one request, not already claimed, and Big doesn't have a match
     const uncontested = Object.entries(littleCounts)
-        .filter(([name, data]) => data.requests.length === 1 && !isAlreadyClaimed(name))
+        .filter(([name, data]) => {
+            const littleNotClaimed = !isAlreadyClaimed(name);
+            const bigNotMatched = !existingMatches.some(match => match.bigName === data.requests[0].bigName);
+            return data.requests.length === 1 && littleNotClaimed && bigNotMatched;
+        })
         .sort((a, b) => a[0].localeCompare(b[0]));
 
     if (uncontested.length === 0) {
-        container.innerHTML = '<p class="empty-state">No uncontested pairings. Either all Littles have multiple requests or are already claimed.</p>';
+        container.innerHTML = '<p class="empty-state">No uncontested pairings. Either all Littles have multiple requests, are already claimed, or the requesting Bigs already have matches.</p>';
         return;
     }
 
@@ -282,31 +286,63 @@ function displayUncontested() {
 
 // Lock a single uncontested pairing
 async function lockSinglePairing(littleName, bigName) {
-    if (confirm(`Lock in this pairing?\n${bigName} → ${littleName}`)) {
-        const newMatch = {
-            littleName: littleName,
-            bigName: bigName
-        };
+    // Check if Big already has a match
+    const bigAlreadyMatched = existingMatches.some(match => match.bigName === bigName);
+    if (bigAlreadyMatched) {
+        alert(`${bigName} already has a match and cannot be locked in with another Little.`);
+        return;
+    }
 
+    // Check if Little is already claimed
+    if (isAlreadyClaimed(littleName)) {
+        alert(`${littleName} is already claimed and cannot be matched again.`);
+        return;
+    }
+
+    if (!confirm(`Lock in this pairing?\n${bigName} → ${littleName}`)) {
+        return;
+    }
+
+    const newMatch = {
+        littleName: littleName,
+        bigName: bigName
+    };
+
+    try {
+        // Save to Google Sheets first
+        console.log('Locking pairing, sending to Google Sheets:', newMatch);
+        await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'addExistingMatch',
+                ...newMatch
+            })
+        });
+
+        console.log('Successfully saved to Google Sheets');
+
+        // Only add to local array after successful save
         existingMatches.push(newMatch);
 
-        // Save to Google Sheets
-        try {
-            await fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'addExistingMatch',
-                    ...newMatch
-                })
-            });
-        } catch (error) {
-            console.error('Error saving to Google Sheets:', error);
-            localStorage.setItem('existingMatches', JSON.stringify({ matches: existingMatches }));
-        }
-
         // Refresh all displays
+        updateStatistics();
+        displayRemainingWorldTeam();
+        displayUncontested();
+        displayConflicts();
+        displayAllPreferences();
+        displayExistingMatches();
+
+        alert(`Match locked in successfully!\n${bigName} → ${littleName}`);
+    } catch (error) {
+        console.error('Error saving to Google Sheets:', error);
+        alert('Error saving match to Google Sheets. Please try again.');
+        // Fallback to localStorage only if Google Sheets fails
+        existingMatches.push(newMatch);
+        localStorage.setItem('existingMatches', JSON.stringify({ matches: existingMatches }));
+
+        // Still refresh displays
         updateStatistics();
         displayRemainingWorldTeam();
         displayUncontested();

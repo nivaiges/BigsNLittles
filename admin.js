@@ -69,6 +69,7 @@ function setupEventListeners() {
         window.location.href = 'index.html';
     });
 
+    document.getElementById('copyBtn').addEventListener('click', copyToClipboard);
     document.getElementById('exportBtn').addEventListener('click', exportToCSV);
     document.getElementById('addMatchBtn').addEventListener('click', addExistingMatch);
     document.getElementById('randomMatchBtn').addEventListener('click', randomMatchPicker);
@@ -540,6 +541,55 @@ function getOrdinalSuffix(num) {
     if (j === 2 && k !== 12) return 'nd';
     if (j === 3 && k !== 13) return 'rd';
     return 'th';
+}
+
+// Copy matches to clipboard in readable format
+async function copyToClipboard() {
+    if (existingMatches.length === 0) {
+        alert('No matches to copy yet.');
+        return;
+    }
+
+    // Group matches by Little
+    const matchesByLittle = {};
+    existingMatches.forEach(match => {
+        if (!matchesByLittle[match.littleName]) {
+            matchesByLittle[match.littleName] = [];
+        }
+        matchesByLittle[match.littleName].push(match.bigName);
+    });
+
+    // Sort by Little name
+    const sortedLittles = Object.keys(matchesByLittle).sort();
+
+    // Build formatted text
+    let text = 'Bigs n Littles 2026:\n';
+    sortedLittles.forEach((littleName, index) => {
+        const bigs = matchesByLittle[littleName];
+        const bigsText = bigs.join(', ');
+        text += `${index + 1}. ${bigsText}, ${littleName}\n`;
+    });
+
+    // Copy to clipboard
+    try {
+        await navigator.clipboard.writeText(text);
+        alert('Copied to clipboard!');
+    } catch (error) {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            alert('Copied to clipboard!');
+        } catch (err) {
+            alert('Failed to copy to clipboard. Please try again.');
+        }
+        document.body.removeChild(textArea);
+    }
 }
 
 // Export to CSV

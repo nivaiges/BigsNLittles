@@ -294,11 +294,33 @@ main {
     margin-left: 10px;
 }
 
-/* Uncontested Pairings */
-.uncontested-actions {
+/* Remaining World Team */
+.remaining-count {
+    background: #fff3cd;
+    color: #856404;
+    padding: 10px 15px;
+    border-radius: 6px;
     margin-bottom: 20px;
+    font-weight: 600;
 }
 
+.remaining-members {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.remaining-members li {
+    background: white;
+    padding: 12px 15px;
+    border-radius: 6px;
+    border-left: 3px solid #ffc107;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Uncontested Pairings */
 .uncontested-count {
     background: #d1ecf1;
     color: #0c5460;

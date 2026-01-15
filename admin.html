@@ -39,6 +39,7 @@
 
             <div class="tabs">
                 <button class="tab-btn active" data-tab="preferences">All Preferences</button>
+                <button class="tab-btn" data-tab="remaining">Remaining World Team</button>
                 <button class="tab-btn" data-tab="uncontested">Uncontested</button>
                 <button class="tab-btn" data-tab="conflicts">Conflicts</button>
                 <button class="tab-btn" data-tab="existing">Existing Matches</button>
@@ -49,12 +50,15 @@
                 <div id="preferencesList"></div>
             </div>
 
+            <div id="remainingTab" class="tab-content">
+                <h2>Remaining World Team Members</h2>
+                <p class="helper-text">These World Team members have not submitted their preferences yet</p>
+                <div id="remainingList"></div>
+            </div>
+
             <div id="uncontestedTab" class="tab-content">
                 <h2>Uncontested Pairings</h2>
                 <p class="helper-text">These Littles have only been requested by one Big - lock them in!</p>
-                <div class="uncontested-actions">
-                    <button id="lockAllUncontestedBtn" class="btn-primary">Lock All Uncontested Pairings</button>
-                </div>
                 <div id="uncontestedList"></div>
             </div>
 

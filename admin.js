@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     populateExistingBigDropdown();
     updateStatistics();
     displayAllPreferences();
+    displayRemainingWorldTeam();
     displayUncontested();
     displayConflicts();
     displayExistingMatches();
@@ -70,7 +71,6 @@ function setupEventListeners() {
 
     document.getElementById('exportBtn').addEventListener('click', exportToCSV);
     document.getElementById('addMatchBtn').addEventListener('click', addExistingMatch);
-    document.getElementById('lockAllUncontestedBtn').addEventListener('click', lockAllUncontested);
 
     // Tab switching
     const tabBtns = document.querySelectorAll('.tab-btn');
@@ -141,6 +141,33 @@ function displayAllPreferences() {
     });
 
     html += '</div>';
+    container.innerHTML = html;
+}
+
+// Display remaining World Team members who haven't submitted
+function displayRemainingWorldTeam() {
+    const container = document.getElementById('remainingList');
+
+    // Get list of World Team members who have already submitted
+    const submitted = new Set(preferences.map(p => p.bigName));
+
+    // Filter to only show those who haven't submitted
+    const remaining = worldTeam.filter(member => !submitted.has(member.name));
+
+    if (remaining.length === 0) {
+        container.innerHTML = '<p class="empty-state">All World Team members have submitted their preferences!</p>';
+        return;
+    }
+
+    let html = '<div class="remaining-list">';
+    html += `<p class="remaining-count">${remaining.length} World Team member(s) have not submitted yet</p>`;
+    html += '<ul class="remaining-members">';
+
+    remaining.forEach(member => {
+        html += `<li>${member.name}</li>`;
+    });
+
+    html += '</ul></div>';
     container.innerHTML = html;
 }
 
@@ -231,79 +258,11 @@ async function lockSinglePairing(littleName, bigName) {
 
         // Refresh all displays
         updateStatistics();
+        displayRemainingWorldTeam();
         displayUncontested();
         displayConflicts();
         displayAllPreferences();
         displayExistingMatches();
-    }
-}
-
-// Lock all uncontested pairings at once
-async function lockAllUncontested() {
-    // Count how many times each Little was requested
-    const littleCounts = {};
-
-    preferences.forEach(pref => {
-        pref.choices.forEach(choice => {
-            if (!littleCounts[choice.littleName]) {
-                littleCounts[choice.littleName] = {
-                    requests: []
-                };
-            }
-            littleCounts[choice.littleName].requests.push({
-                bigName: pref.bigName,
-                rank: choice.rank
-            });
-        });
-    });
-
-    // Get all uncontested pairings
-    const uncontested = Object.entries(littleCounts)
-        .filter(([name, data]) => data.requests.length === 1 && !isAlreadyClaimed(name));
-
-    if (uncontested.length === 0) {
-        alert('No uncontested pairings to lock in.');
-        return;
-    }
-
-    if (confirm(`Lock in all ${uncontested.length} uncontested pairing(s)?`)) {
-        const newMatches = [];
-        uncontested.forEach(([littleName, data]) => {
-            const request = data.requests[0];
-            const newMatch = {
-                littleName: littleName,
-                bigName: request.bigName
-            };
-            existingMatches.push(newMatch);
-            newMatches.push(newMatch);
-        });
-
-        // Save to Google Sheets
-        try {
-            for (const match of newMatches) {
-                await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'addExistingMatch',
-                        ...match
-                    })
-                });
-            }
-        } catch (error) {
-            console.error('Error saving to Google Sheets:', error);
-            localStorage.setItem('existingMatches', JSON.stringify({ matches: existingMatches }));
-        }
-
-        // Refresh all displays
-        updateStatistics();
-        displayUncontested();
-        displayConflicts();
-        displayAllPreferences();
-        displayExistingMatches();
-
-        alert(`Successfully locked in ${uncontested.length} pairing(s)!`);
     }
 }
 
@@ -449,6 +408,7 @@ async function addExistingMatch() {
 
     // Refresh displays
     updateStatistics();
+    displayRemainingWorldTeam();
     displayExistingMatches();
     displayAllPreferences();
     displayConflicts();
@@ -478,6 +438,7 @@ async function removeMatch(index) {
         }
 
         updateStatistics();
+        displayRemainingWorldTeam();
         displayExistingMatches();
         displayAllPreferences();
         displayConflicts();

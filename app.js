@@ -34,20 +34,20 @@ async function loadData() {
 
 // Populate dropdowns with team members
 function populateDropdowns() {
-    const littleSelect = document.getElementById('littleName');
-    const bigSelects = document.querySelectorAll('.big-choice');
+    const bigSelect = document.getElementById('bigName');
+    const littleSelects = document.querySelectorAll('.little-choice');
 
-    // Populate A Team (Littles) dropdown
-    aTeam.forEach(member => {
+    // Populate World Team (Bigs) dropdown
+    worldTeam.forEach(member => {
         const option = document.createElement('option');
         option.value = member.id;
         option.textContent = member.name;
-        littleSelect.appendChild(option);
+        bigSelect.appendChild(option);
     });
 
-    // Populate World Team (Bigs) dropdowns
-    bigSelects.forEach(select => {
-        worldTeam.forEach(member => {
+    // Populate A Team (Littles) dropdowns
+    littleSelects.forEach(select => {
+        aTeam.forEach(member => {
             const option = document.createElement('option');
             option.value = member.id;
             option.textContent = member.name;
@@ -66,17 +66,17 @@ function setupEventListeners() {
         window.location.href = 'admin.html';
     });
 
-    // Prevent selecting the same Big multiple times
-    const bigSelects = document.querySelectorAll('.big-choice');
-    bigSelects.forEach(select => {
+    // Prevent selecting the same Little multiple times
+    const littleSelects = document.querySelectorAll('.little-choice');
+    littleSelects.forEach(select => {
         select.addEventListener('change', validateUniqueChoices);
     });
 }
 
-// Validate that each Big is only selected once
+// Validate that each Little is only selected once
 function validateUniqueChoices() {
-    const bigSelects = document.querySelectorAll('.big-choice');
-    const selectedValues = Array.from(bigSelects)
+    const littleSelects = document.querySelectorAll('.little-choice');
+    const selectedValues = Array.from(littleSelects)
         .map(select => select.value)
         .filter(value => value !== '');
 
@@ -99,31 +99,31 @@ async function handleSubmit(e) {
         return;
     }
 
-    const littleId = parseInt(document.getElementById('littleName').value);
-    const littleName = aTeam.find(m => m.id === littleId)?.name;
+    const bigId = parseInt(document.getElementById('bigName').value);
+    const bigName = worldTeam.find(m => m.id === bigId)?.name;
 
     const choices = [];
     for (let i = 1; i <= 5; i++) {
         const choiceId = parseInt(document.getElementById(`choice${i}`).value);
-        const choiceName = worldTeam.find(m => m.id === choiceId)?.name;
+        const choiceName = aTeam.find(m => m.id === choiceId)?.name;
         if (choiceId && choiceName) {
             choices.push({
                 rank: i,
-                bigId: choiceId,
-                bigName: choiceName
+                littleId: choiceId,
+                littleName: choiceName
             });
         }
     }
 
     const submission = {
-        littleId,
-        littleName,
+        bigId,
+        bigName,
         choices,
         timestamp: new Date().toISOString()
     };
 
     // Check if this person already submitted
-    const existingIndex = preferences.findIndex(p => p.littleId === littleId);
+    const existingIndex = preferences.findIndex(p => p.bigId === bigId);
     if (existingIndex !== -1) {
         if (!confirm('You have already submitted preferences. Do you want to update them?')) {
             return;

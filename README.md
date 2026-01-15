@@ -12,19 +12,19 @@ A simple web application for matching World Team (Bigs) with A Team (Littles) ba
 
 ## How to Use
 
-### For A Team Members (Littles)
+### For World Team Members (Bigs)
 
 1. Open `index.html` in your web browser
 2. Select your name from the dropdown
-3. Rank your top 5 World Team members in order of preference
+3. Rank your top 5 A Team members in order of preference
 4. Click "Submit Preferences"
 
 ### For Admins
 
 1. Click "Admin View" or open `admin.html`
 2. View all submissions in the "All Preferences" tab
-3. Check the "Conflicts" tab to see which Bigs have multiple requests
-4. Use the "Existing Matches" tab to mark World Team members who are already claimed
+3. Check the "Conflicts" tab to see which Littles have multiple requests
+4. Use the "Existing Matches" tab to mark A Team members who are already claimed
 5. Export data to CSV for further analysis
 
 ## Deployment
@@ -50,9 +50,9 @@ Simply open `index.html` in any modern web browser. All data is stored in the br
 
 ## Team Structure
 
-- **World Team**: 51 members (Bigs)
-- **A Team**: 35 members (Littles)
-- Multiple Littles can have the same Big
+- **World Team**: 51 members (Bigs) - They select their Littles
+- **A Team**: 35 members (Littles) - They get selected by Bigs
+- Multiple Bigs can select the same Little (since there are more Bigs than Littles)
 
 ## Files
 

@@ -83,8 +83,8 @@ function switchTab(tabName) {
 
 // Update statistics
 function updateStatistics() {
-    const uniqueSubmitters = new Set(preferences.map(p => p.littleId)).size;
-    const remaining = aTeam.length - uniqueSubmitters;
+    const uniqueSubmitters = new Set(preferences.map(p => p.bigId)).size;
+    const remaining = worldTeam.length - uniqueSubmitters;
 
     document.getElementById('totalSubmissions').textContent = uniqueSubmitters;
     document.getElementById('remainingLittles').textContent = remaining;
@@ -110,13 +110,13 @@ function displayAllPreferences() {
     sortedPrefs.forEach(pref => {
         html += `
             <div class="preference-card">
-                <h3>${pref.littleName}</h3>
+                <h3>${pref.bigName}</h3>
                 <p class="timestamp">Submitted: ${new Date(pref.timestamp).toLocaleString()}</p>
                 <ol class="choices-list">
                     ${pref.choices.map(choice => `
                         <li>
-                            <strong>${choice.rank}${getOrdinalSuffix(choice.rank)} Choice:</strong> ${choice.bigName}
-                            ${isAlreadyClaimed(choice.bigId) ? '<span class="claimed-badge">Already Claimed</span>' : ''}
+                            <strong>${choice.rank}${getOrdinalSuffix(choice.rank)} Choice:</strong> ${choice.littleName}
+                            ${isAlreadyClaimed(choice.littleId) ? '<span class="claimed-badge">Already Claimed</span>' : ''}
                         </li>
                     `).join('')}
                 </ol>
@@ -128,51 +128,51 @@ function displayAllPreferences() {
     container.innerHTML = html;
 }
 
-// Display conflicts (popular Bigs)
+// Display conflicts (popular Littles)
 function displayConflicts() {
     const container = document.getElementById('conflictsList');
 
-    // Count how many times each Big was requested
-    const bigCounts = {};
+    // Count how many times each Little was requested
+    const littleCounts = {};
 
     preferences.forEach(pref => {
         pref.choices.forEach(choice => {
-            if (!bigCounts[choice.bigId]) {
-                bigCounts[choice.bigId] = {
-                    name: choice.bigName,
+            if (!littleCounts[choice.littleId]) {
+                littleCounts[choice.littleId] = {
+                    name: choice.littleName,
                     requests: []
                 };
             }
-            bigCounts[choice.bigId].requests.push({
-                littleName: pref.littleName,
+            littleCounts[choice.littleId].requests.push({
+                bigName: pref.bigName,
                 rank: choice.rank
             });
         });
     });
 
-    // Filter to only show Bigs with multiple requests
-    const conflicts = Object.entries(bigCounts)
+    // Filter to only show Littles with multiple requests
+    const conflicts = Object.entries(littleCounts)
         .filter(([id, data]) => data.requests.length > 1)
         .sort((a, b) => b[1].requests.length - a[1].requests.length);
 
     if (conflicts.length === 0) {
-        container.innerHTML = '<p class="empty-state">No conflicts yet. Each Big has at most one request.</p>';
+        container.innerHTML = '<p class="empty-state">No conflicts yet. Each Little has at most one request.</p>';
         return;
     }
 
     let html = '<div class="conflicts-list">';
 
-    conflicts.forEach(([bigId, data]) => {
-        const isClaimed = isAlreadyClaimed(parseInt(bigId));
+    conflicts.forEach(([littleId, data]) => {
+        const isClaimed = isAlreadyClaimed(parseInt(littleId));
         html += `
             <div class="conflict-card ${isClaimed ? 'claimed' : ''}">
                 <h3>${data.name} ${isClaimed ? '(Already Claimed)' : ''}</h3>
-                <p class="conflict-count">${data.requests.length} people want this Big</p>
+                <p class="conflict-count">${data.requests.length} Bigs want this Little</p>
                 <ul class="requesters-list">
                     ${data.requests
                         .sort((a, b) => a.rank - b.rank)
                         .map(req => `
-                            <li>${req.littleName} - ${req.rank}${getOrdinalSuffix(req.rank)} choice</li>
+                            <li>${req.bigName} - ${req.rank}${getOrdinalSuffix(req.rank)} choice</li>
                         `).join('')}
                 </ul>
             </div>
@@ -183,11 +183,11 @@ function displayConflicts() {
     container.innerHTML = html;
 }
 
-// Populate existing Big dropdown
+// Populate existing Little dropdown
 function populateExistingBigDropdown() {
     const select = document.getElementById('existingBig');
 
-    worldTeam.forEach(member => {
+    aTeam.forEach(member => {
         const option = document.createElement('option');
         option.value = member.id;
         option.textContent = member.name;
@@ -221,20 +221,20 @@ function displayExistingMatches() {
 
 // Add existing match
 function addExistingMatch() {
-    const bigId = parseInt(document.getElementById('existingBig').value);
-    const littleName = document.getElementById('existingLittle').value.trim();
+    const littleId = parseInt(document.getElementById('existingBig').value);
+    const bigName = document.getElementById('existingLittle').value.trim();
 
-    if (!bigId || !littleName) {
-        alert('Please select a Big and enter a Little name.');
+    if (!littleId || !bigName) {
+        alert('Please select a Little and enter a Big name.');
         return;
     }
 
-    const bigName = worldTeam.find(m => m.id === bigId)?.name;
+    const littleName = aTeam.find(m => m.id === littleId)?.name;
 
     existingMatches.push({
-        bigId,
-        bigName,
-        littleName
+        littleId,
+        littleName,
+        bigName
     });
 
     // Save to localStorage
@@ -264,9 +264,9 @@ function removeMatch(index) {
     }
 }
 
-// Check if a Big is already claimed
-function isAlreadyClaimed(bigId) {
-    return existingMatches.some(match => match.bigId === bigId);
+// Check if a Little is already claimed
+function isAlreadyClaimed(littleId) {
+    return existingMatches.some(match => match.littleId === littleId);
 }
 
 // Get ordinal suffix (1st, 2nd, 3rd, etc.)
@@ -286,14 +286,14 @@ function exportToCSV() {
         return;
     }
 
-    let csv = 'Little Name,1st Choice,2nd Choice,3rd Choice,4th Choice,5th Choice,Submission Time\n';
+    let csv = 'Big Name,1st Choice,2nd Choice,3rd Choice,4th Choice,5th Choice,Submission Time\n';
 
     preferences.forEach(pref => {
-        const choices = pref.choices.map(c => c.bigName);
+        const choices = pref.choices.map(c => c.littleName);
         while (choices.length < 5) choices.push('');
 
         const row = [
-            pref.littleName,
+            pref.bigName,
             ...choices,
             new Date(pref.timestamp).toLocaleString()
         ].map(field => `"${field}"`).join(',');

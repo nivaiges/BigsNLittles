@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     populateExistingBigDropdown();
     updateStatistics();
     displayAllPreferences();
+    displayUncontested();
     displayConflicts();
     displayExistingMatches();
     setupEventListeners();
@@ -55,6 +56,7 @@ function setupEventListeners() {
 
     document.getElementById('exportBtn').addEventListener('click', exportToCSV);
     document.getElementById('addMatchBtn').addEventListener('click', addExistingMatch);
+    document.getElementById('lockAllUncontestedBtn').addEventListener('click', lockAllUncontested);
 
     // Tab switching
     const tabBtns = document.querySelectorAll('.tab-btn');
@@ -126,6 +128,140 @@ function displayAllPreferences() {
 
     html += '</div>';
     container.innerHTML = html;
+}
+
+// Display uncontested pairings (Littles with only one request)
+function displayUncontested() {
+    const container = document.getElementById('uncontestedList');
+
+    // Count how many times each Little was requested
+    const littleCounts = {};
+
+    preferences.forEach(pref => {
+        pref.choices.forEach(choice => {
+            if (!littleCounts[choice.littleId]) {
+                littleCounts[choice.littleId] = {
+                    name: choice.littleName,
+                    requests: []
+                };
+            }
+            littleCounts[choice.littleId].requests.push({
+                bigId: pref.bigId,
+                bigName: pref.bigName,
+                rank: choice.rank
+            });
+        });
+    });
+
+    // Filter to only show Littles with exactly one request and not already claimed
+    const uncontested = Object.entries(littleCounts)
+        .filter(([id, data]) => data.requests.length === 1 && !isAlreadyClaimed(parseInt(id)))
+        .sort((a, b) => a[1].name.localeCompare(b[1].name));
+
+    if (uncontested.length === 0) {
+        container.innerHTML = '<p class="empty-state">No uncontested pairings. Either all Littles have multiple requests or are already claimed.</p>';
+        return;
+    }
+
+    let html = '<div class="uncontested-list">';
+    html += `<p class="uncontested-count">${uncontested.length} uncontested pairing(s) ready to lock in</p>`;
+
+    uncontested.forEach(([littleId, data]) => {
+        const request = data.requests[0];
+        html += `
+            <div class="uncontested-card" data-little-id="${littleId}" data-big-name="${request.bigName}">
+                <div class="pairing-info">
+                    <div class="pairing-big">
+                        <strong>Big:</strong> ${request.bigName}
+                    </div>
+                    <div class="pairing-arrow">→</div>
+                    <div class="pairing-little">
+                        <strong>Little:</strong> ${data.name}
+                    </div>
+                    <div class="pairing-rank">(${request.rank}${getOrdinalSuffix(request.rank)} choice)</div>
+                </div>
+                <button class="btn-lock" onclick="lockSinglePairing(${littleId}, '${request.bigName.replace(/'/g, "\\'")}', '${data.name.replace(/'/g, "\\'")}')">
+                    Lock In
+                </button>
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// Lock a single uncontested pairing
+function lockSinglePairing(littleId, bigName, littleName) {
+    if (confirm(`Lock in this pairing?\n${bigName} → ${littleName}`)) {
+        existingMatches.push({
+            littleId: littleId,
+            littleName: littleName,
+            bigName: bigName
+        });
+
+        localStorage.setItem('existingMatches', JSON.stringify({ matches: existingMatches }));
+
+        // Refresh all displays
+        updateStatistics();
+        displayUncontested();
+        displayConflicts();
+        displayAllPreferences();
+        displayExistingMatches();
+    }
+}
+
+// Lock all uncontested pairings at once
+function lockAllUncontested() {
+    // Count how many times each Little was requested
+    const littleCounts = {};
+
+    preferences.forEach(pref => {
+        pref.choices.forEach(choice => {
+            if (!littleCounts[choice.littleId]) {
+                littleCounts[choice.littleId] = {
+                    name: choice.littleName,
+                    requests: []
+                };
+            }
+            littleCounts[choice.littleId].requests.push({
+                bigId: pref.bigId,
+                bigName: pref.bigName,
+                rank: choice.rank
+            });
+        });
+    });
+
+    // Get all uncontested pairings
+    const uncontested = Object.entries(littleCounts)
+        .filter(([id, data]) => data.requests.length === 1 && !isAlreadyClaimed(parseInt(id)));
+
+    if (uncontested.length === 0) {
+        alert('No uncontested pairings to lock in.');
+        return;
+    }
+
+    if (confirm(`Lock in all ${uncontested.length} uncontested pairing(s)?`)) {
+        uncontested.forEach(([littleId, data]) => {
+            const request = data.requests[0];
+            existingMatches.push({
+                littleId: parseInt(littleId),
+                littleName: data.name,
+                bigName: request.bigName
+            });
+        });
+
+        localStorage.setItem('existingMatches', JSON.stringify({ matches: existingMatches }));
+
+        // Refresh all displays
+        updateStatistics();
+        displayUncontested();
+        displayConflicts();
+        displayAllPreferences();
+        displayExistingMatches();
+
+        alert(`Successfully locked in ${uncontested.length} pairing(s)!`);
+    }
 }
 
 // Display conflicts (popular Littles)

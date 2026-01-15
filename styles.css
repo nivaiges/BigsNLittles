@@ -294,6 +294,81 @@ main {
     margin-left: 10px;
 }
 
+/* Uncontested Pairings */
+.uncontested-actions {
+    margin-bottom: 20px;
+}
+
+.uncontested-count {
+    background: #d1ecf1;
+    color: #0c5460;
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.uncontested-list {
+    display: grid;
+    gap: 15px;
+}
+
+.uncontested-card {
+    background: #d4edda;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid #28a745;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.pairing-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.pairing-big,
+.pairing-little {
+    background: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+}
+
+.pairing-arrow {
+    font-size: 1.5em;
+    color: #28a745;
+    font-weight: bold;
+}
+
+.pairing-rank {
+    color: #155724;
+    font-size: 0.9em;
+    font-style: italic;
+}
+
+.btn-lock {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.3s;
+}
+
+.btn-lock:hover {
+    background: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
 /* Conflicts */
 .conflicts-list {
     display: grid;

@@ -99,7 +99,7 @@ function switchTab(tabName) {
 
 // Update statistics
 function updateStatistics() {
-    const uniqueSubmitters = new Set(preferences.map(p => p.bigId)).size;
+    const uniqueSubmitters = new Set(preferences.map(p => p.bigName)).size;
     const remaining = worldTeam.length - uniqueSubmitters;
 
     document.getElementById('totalSubmissions').textContent = uniqueSubmitters;
@@ -132,7 +132,7 @@ function displayAllPreferences() {
                     ${pref.choices.map(choice => `
                         <li>
                             <strong>${choice.rank}${getOrdinalSuffix(choice.rank)} Choice:</strong> ${choice.littleName}
-                            ${isAlreadyClaimed(choice.littleId) ? '<span class="claimed-badge">Already Claimed</span>' : ''}
+                            ${isAlreadyClaimed(choice.littleName) ? '<span class="claimed-badge">Already Claimed</span>' : ''}
                         </li>
                     `).join('')}
                 </ol>
@@ -153,14 +153,12 @@ function displayUncontested() {
 
     preferences.forEach(pref => {
         pref.choices.forEach(choice => {
-            if (!littleCounts[choice.littleId]) {
-                littleCounts[choice.littleId] = {
-                    name: choice.littleName,
+            if (!littleCounts[choice.littleName]) {
+                littleCounts[choice.littleName] = {
                     requests: []
                 };
             }
-            littleCounts[choice.littleId].requests.push({
-                bigId: pref.bigId,
+            littleCounts[choice.littleName].requests.push({
                 bigName: pref.bigName,
                 rank: choice.rank
             });
@@ -169,8 +167,8 @@ function displayUncontested() {
 
     // Filter to only show Littles with exactly one request and not already claimed
     const uncontested = Object.entries(littleCounts)
-        .filter(([id, data]) => data.requests.length === 1 && !isAlreadyClaimed(parseInt(id)))
-        .sort((a, b) => a[1].name.localeCompare(b[1].name));
+        .filter(([name, data]) => data.requests.length === 1 && !isAlreadyClaimed(name))
+        .sort((a, b) => a[0].localeCompare(b[0]));
 
     if (uncontested.length === 0) {
         container.innerHTML = '<p class="empty-state">No uncontested pairings. Either all Littles have multiple requests or are already claimed.</p>';
@@ -180,21 +178,21 @@ function displayUncontested() {
     let html = '<div class="uncontested-list">';
     html += `<p class="uncontested-count">${uncontested.length} uncontested pairing(s) ready to lock in</p>`;
 
-    uncontested.forEach(([littleId, data]) => {
+    uncontested.forEach(([littleName, data]) => {
         const request = data.requests[0];
         html += `
-            <div class="uncontested-card" data-little-id="${littleId}" data-big-name="${request.bigName}">
+            <div class="uncontested-card" data-little-name="${littleName}" data-big-name="${request.bigName}">
                 <div class="pairing-info">
                     <div class="pairing-big">
                         <strong>Big:</strong> ${request.bigName}
                     </div>
                     <div class="pairing-arrow">→</div>
                     <div class="pairing-little">
-                        <strong>Little:</strong> ${data.name}
+                        <strong>Little:</strong> ${littleName}
                     </div>
                     <div class="pairing-rank">(${request.rank}${getOrdinalSuffix(request.rank)} choice)</div>
                 </div>
-                <button class="btn-lock" onclick="lockSinglePairing(${littleId}, '${request.bigName.replace(/'/g, "\\'")}', '${data.name.replace(/'/g, "\\'")}')">
+                <button class="btn-lock" onclick="lockSinglePairing('${littleName.replace(/'/g, "\\'")}', '${request.bigName.replace(/'/g, "\\'")}')">
                     Lock In
                 </button>
             </div>
@@ -206,10 +204,9 @@ function displayUncontested() {
 }
 
 // Lock a single uncontested pairing
-async function lockSinglePairing(littleId, bigName, littleName) {
+async function lockSinglePairing(littleName, bigName) {
     if (confirm(`Lock in this pairing?\n${bigName} → ${littleName}`)) {
         const newMatch = {
-            littleId: littleId,
             littleName: littleName,
             bigName: bigName
         };
@@ -248,14 +245,12 @@ async function lockAllUncontested() {
 
     preferences.forEach(pref => {
         pref.choices.forEach(choice => {
-            if (!littleCounts[choice.littleId]) {
-                littleCounts[choice.littleId] = {
-                    name: choice.littleName,
+            if (!littleCounts[choice.littleName]) {
+                littleCounts[choice.littleName] = {
                     requests: []
                 };
             }
-            littleCounts[choice.littleId].requests.push({
-                bigId: pref.bigId,
+            littleCounts[choice.littleName].requests.push({
                 bigName: pref.bigName,
                 rank: choice.rank
             });
@@ -264,7 +259,7 @@ async function lockAllUncontested() {
 
     // Get all uncontested pairings
     const uncontested = Object.entries(littleCounts)
-        .filter(([id, data]) => data.requests.length === 1 && !isAlreadyClaimed(parseInt(id)));
+        .filter(([name, data]) => data.requests.length === 1 && !isAlreadyClaimed(name));
 
     if (uncontested.length === 0) {
         alert('No uncontested pairings to lock in.');
@@ -273,11 +268,10 @@ async function lockAllUncontested() {
 
     if (confirm(`Lock in all ${uncontested.length} uncontested pairing(s)?`)) {
         const newMatches = [];
-        uncontested.forEach(([littleId, data]) => {
+        uncontested.forEach(([littleName, data]) => {
             const request = data.requests[0];
             const newMatch = {
-                littleId: parseInt(littleId),
-                littleName: data.name,
+                littleName: littleName,
                 bigName: request.bigName
             };
             existingMatches.push(newMatch);
@@ -322,13 +316,12 @@ function displayConflicts() {
 
     preferences.forEach(pref => {
         pref.choices.forEach(choice => {
-            if (!littleCounts[choice.littleId]) {
-                littleCounts[choice.littleId] = {
-                    name: choice.littleName,
+            if (!littleCounts[choice.littleName]) {
+                littleCounts[choice.littleName] = {
                     requests: []
                 };
             }
-            littleCounts[choice.littleId].requests.push({
+            littleCounts[choice.littleName].requests.push({
                 bigName: pref.bigName,
                 rank: choice.rank
             });
@@ -337,7 +330,7 @@ function displayConflicts() {
 
     // Filter to only show Littles with multiple requests
     const conflicts = Object.entries(littleCounts)
-        .filter(([id, data]) => data.requests.length > 1)
+        .filter(([name, data]) => data.requests.length > 1)
         .sort((a, b) => b[1].requests.length - a[1].requests.length);
 
     if (conflicts.length === 0) {
@@ -347,11 +340,11 @@ function displayConflicts() {
 
     let html = '<div class="conflicts-list">';
 
-    conflicts.forEach(([littleId, data]) => {
-        const isClaimed = isAlreadyClaimed(parseInt(littleId));
+    conflicts.forEach(([littleName, data]) => {
+        const isClaimed = isAlreadyClaimed(littleName);
         html += `
             <div class="conflict-card ${isClaimed ? 'claimed' : ''}">
-                <h3>${data.name} ${isClaimed ? '(Already Claimed)' : ''}</h3>
+                <h3>${littleName} ${isClaimed ? '(Already Claimed)' : ''}</h3>
                 <p class="conflict-count">${data.requests.length} Bigs want this Little</p>
                 <ul class="requesters-list">
                     ${data.requests
@@ -374,7 +367,7 @@ function populateExistingBigDropdown() {
 
     aTeam.forEach(member => {
         const option = document.createElement('option');
-        option.value = member.id;
+        option.value = member.name;
         option.textContent = member.name;
         select.appendChild(option);
     });
@@ -406,18 +399,16 @@ function displayExistingMatches() {
 
 // Add existing match
 async function addExistingMatch() {
-    const littleId = parseInt(document.getElementById('existingBig').value);
+    const littleSelect = document.getElementById('existingBig');
+    const littleName = littleSelect.options[littleSelect.selectedIndex]?.text;
     const bigName = document.getElementById('existingLittle').value.trim();
 
-    if (!littleId || !bigName) {
+    if (!littleName || !bigName) {
         alert('Please select a Little and enter a Big name.');
         return;
     }
 
-    const littleName = aTeam.find(m => m.id === littleId)?.name;
-
     const newMatch = {
-        littleId,
         littleName,
         bigName
     };
@@ -465,7 +456,7 @@ async function removeMatch(index) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     action: 'removeExistingMatch',
-                    littleId: matchToRemove.littleId,
+                    littleName: matchToRemove.littleName,
                     bigName: matchToRemove.bigName
                 })
             });
@@ -482,8 +473,8 @@ async function removeMatch(index) {
 }
 
 // Check if a Little is already claimed
-function isAlreadyClaimed(littleId) {
-    return existingMatches.some(match => match.littleId === littleId);
+function isAlreadyClaimed(littleName) {
+    return existingMatches.some(match => match.littleName === littleName);
 }
 
 // Get ordinal suffix (1st, 2nd, 3rd, etc.)

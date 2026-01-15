@@ -47,21 +47,18 @@ function getPreferences(sheet) {
 
     const choices = [];
     for (let j = 0; j < 5; j++) {
-      const choiceIdCol = 3 + (j * 2);
-      const choiceNameCol = 4 + (j * 2);
-      if (row[choiceIdCol]) {
+      const choiceCol = 2 + j; // Columns C, D, E, F, G (index 2-6)
+      if (row[choiceCol]) {
         choices.push({
           rank: j + 1,
-          littleId: row[choiceIdCol],
-          littleName: row[choiceNameCol]
+          littleName: row[choiceCol]
         });
       }
     }
 
     preferences.push({
       timestamp: row[0],
-      bigId: row[1],
-      bigName: row[2],
+      bigName: row[1],
       choices: choices
     });
   }
@@ -81,9 +78,8 @@ function getExistingMatches(sheet) {
     if (!row[0]) continue;
 
     matches.push({
-      littleId: row[0],
-      littleName: row[1],
-      bigName: row[2]
+      littleName: row[0],
+      bigName: row[1]
     });
   }
 
@@ -100,7 +96,7 @@ function submitPreference(sheet, data) {
   let rowToUpdate = -1;
 
   for (let i = 1; i < existingData.length; i++) {
-    if (existingData[i][1] === data.bigId) {
+    if (existingData[i][1] === data.bigName) {
       rowToUpdate = i + 1; // +1 because sheets are 1-indexed
       break;
     }
@@ -109,17 +105,14 @@ function submitPreference(sheet, data) {
   // Prepare row data
   const rowData = [
     new Date(data.timestamp),
-    data.bigId,
     data.bigName
   ];
 
   // Add choices (up to 5)
   for (let i = 0; i < 5; i++) {
     if (data.choices[i]) {
-      rowData.push(data.choices[i].littleId);
       rowData.push(data.choices[i].littleName);
     } else {
-      rowData.push('');
       rowData.push('');
     }
   }
@@ -141,7 +134,6 @@ function addExistingMatch(sheet, data) {
   const matchesSheet = sheet.getSheetByName('ExistingMatches');
 
   matchesSheet.appendRow([
-    data.littleId,
     data.littleName,
     data.bigName
   ]);
@@ -156,7 +148,7 @@ function removeExistingMatch(sheet, data) {
   const existingData = matchesSheet.getDataRange().getValues();
 
   for (let i = 1; i < existingData.length; i++) {
-    if (existingData[i][0] === data.littleId && existingData[i][2] === data.bigName) {
+    if (existingData[i][0] === data.littleName && existingData[i][1] === data.bigName) {
       matchesSheet.deleteRow(i + 1);
       break;
     }

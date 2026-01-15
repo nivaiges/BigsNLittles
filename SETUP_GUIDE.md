@@ -14,24 +14,17 @@ This guide will help you set up Google Sheets as the backend database for the Bi
 ### Preferences Sheet Setup
 Add these column headers in row 1:
 - A1: `Timestamp`
-- B1: `Big ID`
-- C1: `Big Name`
-- D1: `1st Choice ID`
-- E1: `1st Choice Name`
-- F1: `2nd Choice ID`
-- G1: `2nd Choice Name`
-- H1: `3rd Choice ID`
-- I1: `3rd Choice Name`
-- J1: `4th Choice ID`
-- K1: `4th Choice Name`
-- L1: `5th Choice ID`
-- M1: `5th Choice Name`
+- B1: `Big Name`
+- C1: `1st Choice`
+- D1: `2nd Choice`
+- E1: `3rd Choice`
+- F1: `4th Choice`
+- G1: `5th Choice`
 
 ### ExistingMatches Sheet Setup
 Add these column headers in row 1:
-- A1: `Little ID`
-- B1: `Little Name`
-- C1: `Big Name`
+- A1: `Little Name`
+- B1: `Big Name`
 
 ## Step 2: Create Google Apps Script
 

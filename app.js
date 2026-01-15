@@ -40,7 +40,7 @@ function populateDropdowns() {
     // Populate World Team (Bigs) dropdown
     worldTeam.forEach(member => {
         const option = document.createElement('option');
-        option.value = member.id;
+        option.value = member.name;
         option.textContent = member.name;
         bigSelect.appendChild(option);
     });
@@ -49,7 +49,7 @@ function populateDropdowns() {
     littleSelects.forEach(select => {
         aTeam.forEach(member => {
             const option = document.createElement('option');
-            option.value = member.id;
+            option.value = member.name;
             option.textContent = member.name;
             select.appendChild(option);
         });
@@ -124,31 +124,27 @@ async function handleSubmit(e) {
         return;
     }
 
-    const bigId = parseInt(document.getElementById('bigName').value);
-    const bigName = worldTeam.find(m => m.id === bigId)?.name;
+    const bigName = document.getElementById('bigName').value;
 
     const choices = [];
     for (let i = 1; i <= 5; i++) {
-        const choiceId = parseInt(document.getElementById(`choice${i}`).value);
-        const choiceName = aTeam.find(m => m.id === choiceId)?.name;
-        if (choiceId && choiceName) {
+        const littleName = document.getElementById(`choice${i}`).value;
+        if (littleName) {
             choices.push({
                 rank: i,
-                littleId: choiceId,
-                littleName: choiceName
+                littleName: littleName
             });
         }
     }
 
     const submission = {
-        bigId,
         bigName,
         choices,
         timestamp: new Date().toISOString()
     };
 
     // Check if this person already submitted
-    const existingIndex = preferences.findIndex(p => p.bigId === bigId);
+    const existingIndex = preferences.findIndex(p => p.bigName === bigName);
     if (existingIndex !== -1) {
         if (!confirm('You have already submitted preferences. Do you want to update them?')) {
             return;

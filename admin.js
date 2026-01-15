@@ -361,15 +361,25 @@ function displayConflicts() {
     container.innerHTML = html;
 }
 
-// Populate existing Little dropdown
+// Populate existing match dropdowns
 function populateExistingBigDropdown() {
-    const select = document.getElementById('existingBig');
+    const littleSelect = document.getElementById('existingLittle');
+    const bigSelect = document.getElementById('existingBig');
 
+    // Populate A Team (Littles) dropdown
     aTeam.forEach(member => {
         const option = document.createElement('option');
         option.value = member.name;
         option.textContent = member.name;
-        select.appendChild(option);
+        littleSelect.appendChild(option);
+    });
+
+    // Populate World Team (Bigs) dropdown
+    worldTeam.forEach(member => {
+        const option = document.createElement('option');
+        option.value = member.name;
+        option.textContent = member.name;
+        bigSelect.appendChild(option);
     });
 }
 
@@ -399,12 +409,14 @@ function displayExistingMatches() {
 
 // Add existing match
 async function addExistingMatch() {
-    const littleSelect = document.getElementById('existingBig');
-    const littleName = littleSelect.options[littleSelect.selectedIndex]?.text;
-    const bigName = document.getElementById('existingLittle').value.trim();
+    const littleSelect = document.getElementById('existingLittle');
+    const bigSelect = document.getElementById('existingBig');
+
+    const littleName = littleSelect.value;
+    const bigName = bigSelect.value;
 
     if (!littleName || !bigName) {
-        alert('Please select a Little and enter a Big name.');
+        alert('Please select both a Little and a Big.');
         return;
     }
 
@@ -432,8 +444,8 @@ async function addExistingMatch() {
     }
 
     // Reset form
-    document.getElementById('existingBig').value = '';
-    document.getElementById('existingLittle').value = '';
+    littleSelect.value = '';
+    bigSelect.value = '';
 
     // Refresh displays
     updateStatistics();

@@ -9,4 +9,4 @@ const GOOGLE_SCRIPT_URL = 'YOUR_SCRIPT_URL_HERE';
 // 4. Save this file
 
 // Example:
-// const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz.../exec';
+// const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwu5Rnk_7OhojcZzHvVeykwdo-FysRBnuPFR967ZjvgV3Fh4XU4u2Ax6MzJ2UU1eZub/exec';

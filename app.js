@@ -68,8 +68,11 @@ function setupEventListeners() {
 
     // Prevent selecting the same Little multiple times
     const littleSelects = document.querySelectorAll('.little-choice');
-    littleSelects.forEach(select => {
-        select.addEventListener('change', validateUniqueChoices);
+    littleSelects.forEach((select, index) => {
+        select.addEventListener('change', () => {
+            handleNoPreference(index);
+            validateUniqueChoices();
+        });
     });
 
     // Secret admin access via triple-click on ampersand
@@ -98,12 +101,42 @@ function setupEventListeners() {
     }
 }
 
+// Handle "No Preference" cascading
+function handleNoPreference(changedIndex) {
+    const littleSelects = document.querySelectorAll('.little-choice');
+    const changedSelect = littleSelects[changedIndex];
+
+    // If "No Preference" was selected, set all subsequent choices to "No Preference"
+    if (changedSelect.value === 'NO_PREFERENCE') {
+        for (let i = changedIndex + 1; i < littleSelects.length; i++) {
+            littleSelects[i].value = 'NO_PREFERENCE';
+            littleSelects[i].disabled = true;
+        }
+    } else {
+        // If a real choice was selected, enable the next choice (but not all)
+        if (changedIndex + 1 < littleSelects.length) {
+            littleSelects[changedIndex + 1].disabled = false;
+        }
+        // Re-enable all subsequent selects if previous ones aren't "No Preference"
+        let shouldEnable = true;
+        for (let i = 0; i < littleSelects.length; i++) {
+            if (i <= changedIndex) continue;
+            if (shouldEnable && littleSelects[i - 1].value !== 'NO_PREFERENCE') {
+                littleSelects[i].disabled = false;
+            }
+            if (littleSelects[i].value === 'NO_PREFERENCE' && i > changedIndex) {
+                shouldEnable = false;
+            }
+        }
+    }
+}
+
 // Validate that each Little is only selected once
 function validateUniqueChoices() {
     const littleSelects = document.querySelectorAll('.little-choice');
     const selectedValues = Array.from(littleSelects)
         .map(select => select.value)
-        .filter(value => value !== '');
+        .filter(value => value !== '' && value !== 'NO_PREFERENCE');
 
     const duplicates = selectedValues.filter((value, index) =>
         selectedValues.indexOf(value) !== index
@@ -129,7 +162,7 @@ async function handleSubmit(e) {
     const choices = [];
     for (let i = 1; i <= 5; i++) {
         const littleName = document.getElementById(`choice${i}`).value;
-        if (littleName) {
+        if (littleName && littleName !== 'NO_PREFERENCE') {
             choices.push({
                 rank: i,
                 littleName: littleName

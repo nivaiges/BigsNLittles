@@ -467,10 +467,12 @@ async function addExistingMatch() {
         bigName
     };
 
+    console.log('Adding match:', newMatch);
     existingMatches.push(newMatch);
 
     // Save to Google Sheets
     try {
+        console.log('Sending to Google Sheets:', GOOGLE_SCRIPT_URL);
         await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
@@ -480,6 +482,7 @@ async function addExistingMatch() {
                 ...newMatch
             })
         });
+        console.log('Successfully sent to Google Sheets');
     } catch (error) {
         console.error('Error saving to Google Sheets:', error);
         localStorage.setItem('existingMatches', JSON.stringify({ matches: existingMatches }));
@@ -492,9 +495,12 @@ async function addExistingMatch() {
     // Refresh displays
     updateStatistics();
     displayRemainingWorldTeam();
+    displayUncontested();
     displayExistingMatches();
     displayAllPreferences();
     displayConflicts();
+
+    alert('Match added successfully!');
 }
 
 // Remove existing match

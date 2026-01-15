@@ -71,6 +71,7 @@ function setupEventListeners() {
 
     document.getElementById('exportBtn').addEventListener('click', exportToCSV);
     document.getElementById('addMatchBtn').addEventListener('click', addExistingMatch);
+    document.getElementById('randomMatchBtn').addEventListener('click', randomMatchPicker);
 
     // Tab switching
     const tabBtns = document.querySelectorAll('.tab-btn');
@@ -263,6 +264,81 @@ async function lockSinglePairing(littleName, bigName) {
         displayConflicts();
         displayAllPreferences();
         displayExistingMatches();
+    }
+}
+
+// Random match picker with smart selection
+function randomMatchPicker() {
+    // Get World Team members who haven't submitted yet
+    const submitted = new Set(preferences.map(p => p.bigName));
+    const remainingBigs = worldTeam.filter(member => !submitted.has(member.name));
+
+    if (remainingBigs.length === 0) {
+        alert('All World Team members have already submitted their preferences!');
+        return;
+    }
+
+    // Count how many Bigs each Little already has
+    const littleMatchCounts = {};
+    aTeam.forEach(member => {
+        littleMatchCounts[member.name] = 0;
+    });
+
+    existingMatches.forEach(match => {
+        if (littleMatchCounts.hasOwnProperty(match.littleName)) {
+            littleMatchCounts[match.littleName]++;
+        }
+    });
+
+    // Priority 1: Littles with 0 matches
+    let availableLittles = aTeam.filter(member => littleMatchCounts[member.name] === 0);
+
+    // Priority 2: If everyone has at least 1 match, select Littles with only 1 match (not yet 2)
+    if (availableLittles.length === 0) {
+        availableLittles = aTeam.filter(member => littleMatchCounts[member.name] < 2);
+    }
+
+    if (availableLittles.length === 0) {
+        alert('All A Team members already have 2 Bigs assigned!');
+        return;
+    }
+
+    // Randomly select a Big and a Little
+    const randomBig = remainingBigs[Math.floor(Math.random() * remainingBigs.length)];
+    const randomLittle = availableLittles[Math.floor(Math.random() * availableLittles.length)];
+
+    // Show confirmation
+    if (confirm(`Random Match:\n\nBig: ${randomBig.name}\nLittle: ${randomLittle.name}\n\nLock in this pairing?`)) {
+        const newMatch = {
+            littleName: randomLittle.name,
+            bigName: randomBig.name
+        };
+
+        existingMatches.push(newMatch);
+
+        // Save to Google Sheets
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'addExistingMatch',
+                ...newMatch
+            })
+        }).catch(error => {
+            console.error('Error saving to Google Sheets:', error);
+            localStorage.setItem('existingMatches', JSON.stringify({ matches: existingMatches }));
+        });
+
+        // Refresh all displays
+        updateStatistics();
+        displayRemainingWorldTeam();
+        displayUncontested();
+        displayConflicts();
+        displayAllPreferences();
+        displayExistingMatches();
+
+        alert(`Match created!\n${randomBig.name} → ${randomLittle.name}`);
     }
 }
 

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bigs & Littles Matcher</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Bigs & Littles Matcher</h1>
+            <p>A Team members: Select your top 5 World Team Bigs</p>
+        </header>
+
+        <main>
+            <form id="preferenceForm">
+                <div class="form-group">
+                    <label for="littleName">Your Name (A Team):</label>
+                    <select id="littleName" required>
+                        <option value="">-- Select Your Name --</option>
+                    </select>
+                </div>
+
+                <div class="preferences-section">
+                    <h2>Rank Your Top 5 Choices</h2>
+                    <p class="helper-text">Select your preferred Bigs in order of preference (1st choice is most preferred)</p>
+
+                    <div class="form-group">
+                        <label for="choice1">1st Choice:</label>
+                        <select id="choice1" class="big-choice" required>
+                            <option value="">-- Select --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="choice2">2nd Choice:</label>
+                        <select id="choice2" class="big-choice" required>
+                            <option value="">-- Select --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="choice3">3rd Choice:</label>
+                        <select id="choice3" class="big-choice" required>
+                            <option value="">-- Select --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="choice4">4th Choice:</label>
+                        <select id="choice4" class="big-choice" required>
+                            <option value="">-- Select --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="choice5">5th Choice:</label>
+                        <select id="choice5" class="big-choice" required>
+                            <option value="">-- Select --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Submit Preferences</button>
+                    <button type="button" id="viewAdminBtn" class="btn-secondary">Admin View</button>
+                </div>
+            </form>
+
+            <div id="successMessage" class="success-message hidden">
+                <p>✓ Your preferences have been submitted successfully!</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Bigs & Littles Matcher</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Admin Dashboard</h1>
+            <p>View and manage Big/Little preferences</p>
+        </header>
+
+        <main>
+            <div class="admin-actions">
+                <button id="backBtn" class="btn-secondary">Back to Form</button>
+                <button id="exportBtn" class="btn-primary">Export to CSV</button>
+            </div>
+
+            <div class="stats-section">
+                <h2>Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3 id="totalSubmissions">0</h3>
+                        <p>Total Submissions</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="remainingLittles">35</h3>
+                        <p>Remaining A Team</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="existingMatches">0</h3>
+                        <p>Existing Matches</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="preferences">All Preferences</button>
+                <button class="tab-btn" data-tab="conflicts">Conflicts</button>
+                <button class="tab-btn" data-tab="existing">Existing Matches</button>
+            </div>
+
+            <div id="preferencesTab" class="tab-content active">
+                <h2>All Preference Submissions</h2>
+                <div id="preferencesList"></div>
+            </div>
+
+            <div id="conflictsTab" class="tab-content">
+                <h2>Popular Bigs (Multiple Requests)</h2>
+                <p class="helper-text">These World Team members have been requested by multiple A Team members</p>
+                <div id="conflictsList"></div>
+            </div>
+
+            <div id="existingTab" class="tab-content">
+                <h2>Manage Existing Matches</h2>
+                <p class="helper-text">Mark World Team members who are already claimed</p>
+
+                <div class="add-match-form">
+                    <h3>Add Existing Match</h3>
+                    <div class="form-group">
+                        <label for="existingBig">World Team (Big):</label>
+                        <select id="existingBig">
+                            <option value="">-- Select --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="existingLittle">A Team (Little):</label>
+                        <input type="text" id="existingLittle" placeholder="Enter name (can be external)">
+                    </div>
+                    <button id="addMatchBtn" class="btn-primary">Add Match</button>
+                </div>
+
+                <div id="existingMatchesList"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

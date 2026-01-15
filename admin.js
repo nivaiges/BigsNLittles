@@ -286,19 +286,6 @@ function displayUncontested() {
 
 // Lock a single uncontested pairing
 async function lockSinglePairing(littleName, bigName) {
-    // Check if Big already has a match
-    const bigAlreadyMatched = existingMatches.some(match => match.bigName === bigName);
-    if (bigAlreadyMatched) {
-        alert(`${bigName} already has a match and cannot be locked in with another Little.`);
-        return;
-    }
-
-    // Check if Little is already claimed
-    if (isAlreadyClaimed(littleName)) {
-        alert(`${littleName} is already claimed and cannot be matched again.`);
-        return;
-    }
-
     if (!confirm(`Lock in this pairing?\n${bigName} → ${littleName}`)) {
         return;
     }

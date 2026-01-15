@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(git add:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd data reload after locking to prevent duplicate matches\n\n- After locking a pairing, now awaits data reload from Google Sheets\n- Ensures existingMatches array is up-to-date before refreshing displays\n- Prevents matched Bigs from appearing in uncontested list\n- Removes fallback localStorage push on error to avoid state inconsistency\n- Added reloadMatchesFromSheets\\(\\) helper function\n- Better console logging for debugging the lock-reload flow\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd data reload after locking to prevent duplicate matches\n\n- After locking a pairing, now awaits data reload from Google Sheets\n- Ensures existingMatches array is up-to-date before refreshing displays\n- Prevents matched Bigs from appearing in uncontested list\n- Removes fallback localStorage push on error to avoid state inconsistency\n- Added reloadMatchesFromSheets\\(\\) helper function\n- Better console logging for debugging the lock-reload flow\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)"
     ]
   }
 }

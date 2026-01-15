@@ -165,13 +165,28 @@ async function handleSubmit(e) {
     showSuccessMessage();
 }
 
-// Save preferences to localStorage (simulating server storage)
+// Save preferences to Google Sheets
 async function savePreferences() {
-    const data = {
-        submissions: preferences
-    };
-    localStorage.setItem('preferences', JSON.stringify(data));
-    console.log('Preferences saved:', data);
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors', // Required for Google Apps Script
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'submitPreference',
+                ...preferences[preferences.length - 1] // Send the most recent submission
+            })
+        });
+
+        console.log('Preferences saved to Google Sheets');
+    } catch (error) {
+        console.error('Error saving to Google Sheets:', error);
+        // Fallback to localStorage
+        localStorage.setItem('preferences', JSON.stringify({ submissions: preferences }));
+        alert('Note: Data saved locally. Make sure to configure Google Sheets in config.js for centralized storage.');
+    }
 }
 
 // Show success message

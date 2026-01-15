@@ -20,28 +20,42 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Load all JSON data
 async function loadData() {
     try {
-        const [aTeamData, worldTeamData, matchesData] = await Promise.all([
+        const [aTeamData, worldTeamData] = await Promise.all([
             fetch('data/a-team.json').then(r => r.json()),
-            fetch('data/world-team.json').then(r => r.json()),
-            fetch('data/existing-matches.json').then(r => r.json())
+            fetch('data/world-team.json').then(r => r.json())
         ]);
 
         aTeam = aTeamData;
         worldTeam = worldTeamData;
-        existingMatches = matchesData.matches || [];
 
-        // Load preferences from localStorage
-        const storedPrefs = localStorage.getItem('preferences');
-        if (storedPrefs) {
-            const data = JSON.parse(storedPrefs);
-            preferences = data.submissions || [];
+        // Load preferences from Google Sheets
+        try {
+            const prefsResponse = await fetch(`${GOOGLE_SCRIPT_URL}?action=getPreferences`);
+            const prefsData = await prefsResponse.json();
+            preferences = prefsData.submissions || [];
+        } catch (error) {
+            console.error('Error loading preferences from Google Sheets:', error);
+            // Fallback to localStorage
+            const storedPrefs = localStorage.getItem('preferences');
+            if (storedPrefs) {
+                const data = JSON.parse(storedPrefs);
+                preferences = data.submissions || [];
+            }
         }
 
-        // Load existing matches from localStorage
-        const storedMatches = localStorage.getItem('existingMatches');
-        if (storedMatches) {
-            const data = JSON.parse(storedMatches);
-            existingMatches = data.matches || [];
+        // Load existing matches from Google Sheets
+        try {
+            const matchesResponse = await fetch(`${GOOGLE_SCRIPT_URL}?action=getExistingMatches`);
+            const matchesData = await matchesResponse.json();
+            existingMatches = matchesData.matches || [];
+        } catch (error) {
+            console.error('Error loading matches from Google Sheets:', error);
+            // Fallback to localStorage
+            const storedMatches = localStorage.getItem('existingMatches');
+            if (storedMatches) {
+                const data = JSON.parse(storedMatches);
+                existingMatches = data.matches || [];
+            }
         }
     } catch (error) {
         console.error('Error loading data:', error);
@@ -192,15 +206,31 @@ function displayUncontested() {
 }
 
 // Lock a single uncontested pairing
-function lockSinglePairing(littleId, bigName, littleName) {
+async function lockSinglePairing(littleId, bigName, littleName) {
     if (confirm(`Lock in this pairing?\n${bigName} → ${littleName}`)) {
-        existingMatches.push({
+        const newMatch = {
             littleId: littleId,
             littleName: littleName,
             bigName: bigName
-        });
+        };
 
-        localStorage.setItem('existingMatches', JSON.stringify({ matches: existingMatches }));
+        existingMatches.push(newMatch);
+
+        // Save to Google Sheets
+        try {
+            await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'addExistingMatch',
+                    ...newMatch
+                })
+            });
+        } catch (error) {
+            console.error('Error saving to Google Sheets:', error);
+            localStorage.setItem('existingMatches', JSON.stringify({ matches: existingMatches }));
+        }
 
         // Refresh all displays
         updateStatistics();
@@ -212,7 +242,7 @@ function lockSinglePairing(littleId, bigName, littleName) {
 }
 
 // Lock all uncontested pairings at once
-function lockAllUncontested() {
+async function lockAllUncontested() {
     // Count how many times each Little was requested
     const littleCounts = {};
 
@@ -242,16 +272,35 @@ function lockAllUncontested() {
     }
 
     if (confirm(`Lock in all ${uncontested.length} uncontested pairing(s)?`)) {
+        const newMatches = [];
         uncontested.forEach(([littleId, data]) => {
             const request = data.requests[0];
-            existingMatches.push({
+            const newMatch = {
                 littleId: parseInt(littleId),
                 littleName: data.name,
                 bigName: request.bigName
-            });
+            };
+            existingMatches.push(newMatch);
+            newMatches.push(newMatch);
         });
 
-        localStorage.setItem('existingMatches', JSON.stringify({ matches: existingMatches }));
+        // Save to Google Sheets
+        try {
+            for (const match of newMatches) {
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'addExistingMatch',
+                        ...match
+                    })
+                });
+            }
+        } catch (error) {
+            console.error('Error saving to Google Sheets:', error);
+            localStorage.setItem('existingMatches', JSON.stringify({ matches: existingMatches }));
+        }
 
         // Refresh all displays
         updateStatistics();
@@ -356,7 +405,7 @@ function displayExistingMatches() {
 }
 
 // Add existing match
-function addExistingMatch() {
+async function addExistingMatch() {
     const littleId = parseInt(document.getElementById('existingBig').value);
     const bigName = document.getElementById('existingLittle').value.trim();
 
@@ -367,14 +416,29 @@ function addExistingMatch() {
 
     const littleName = aTeam.find(m => m.id === littleId)?.name;
 
-    existingMatches.push({
+    const newMatch = {
         littleId,
         littleName,
         bigName
-    });
+    };
 
-    // Save to localStorage
-    localStorage.setItem('existingMatches', JSON.stringify({ matches: existingMatches }));
+    existingMatches.push(newMatch);
+
+    // Save to Google Sheets
+    try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'addExistingMatch',
+                ...newMatch
+            })
+        });
+    } catch (error) {
+        console.error('Error saving to Google Sheets:', error);
+        localStorage.setItem('existingMatches', JSON.stringify({ matches: existingMatches }));
+    }
 
     // Reset form
     document.getElementById('existingBig').value = '';
@@ -388,10 +452,27 @@ function addExistingMatch() {
 }
 
 // Remove existing match
-function removeMatch(index) {
+async function removeMatch(index) {
     if (confirm('Remove this existing match?')) {
+        const matchToRemove = existingMatches[index];
         existingMatches.splice(index, 1);
-        localStorage.setItem('existingMatches', JSON.stringify({ matches: existingMatches }));
+
+        // Remove from Google Sheets
+        try {
+            await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'removeExistingMatch',
+                    littleId: matchToRemove.littleId,
+                    bigName: matchToRemove.bigName
+                })
+            });
+        } catch (error) {
+            console.error('Error removing from Google Sheets:', error);
+            localStorage.setItem('existingMatches', JSON.stringify({ matches: existingMatches }));
+        }
 
         updateStatistics();
         displayExistingMatches();

@@ -321,10 +321,12 @@ async function lockSinglePairing(littleName, bigName) {
             })
         });
 
-        console.log('Successfully saved to Google Sheets');
+        console.log('Successfully saved to Google Sheets, reloading data...');
 
-        // Only add to local array after successful save
-        existingMatches.push(newMatch);
+        // Reload data from Google Sheets to get the latest state
+        await reloadMatchesFromSheets();
+
+        console.log('Data reloaded from Google Sheets');
 
         // Refresh all displays
         updateStatistics();
@@ -338,17 +340,24 @@ async function lockSinglePairing(littleName, bigName) {
     } catch (error) {
         console.error('Error saving to Google Sheets:', error);
         alert('Error saving match to Google Sheets. Please try again.');
-        // Fallback to localStorage only if Google Sheets fails
-        existingMatches.push(newMatch);
-        localStorage.setItem('existingMatches', JSON.stringify({ matches: existingMatches }));
+    }
+}
 
-        // Still refresh displays
-        updateStatistics();
-        displayRemainingWorldTeam();
-        displayUncontested();
-        displayConflicts();
-        displayAllPreferences();
-        displayExistingMatches();
+// Reload existing matches from Google Sheets
+async function reloadMatchesFromSheets() {
+    try {
+        const matchesResponse = await fetch(`${GOOGLE_SCRIPT_URL}?action=getExistingMatches`);
+        const matchesData = await matchesResponse.json();
+        existingMatches = matchesData.matches || [];
+        console.log('Reloaded matches:', existingMatches);
+    } catch (error) {
+        console.error('Error reloading matches from Google Sheets:', error);
+        // Fallback to localStorage
+        const storedMatches = localStorage.getItem('existingMatches');
+        if (storedMatches) {
+            const data = JSON.parse(storedMatches);
+            existingMatches = data.matches || [];
+        }
     }
 }
 

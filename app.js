@@ -35,7 +35,6 @@ async function loadData() {
 // Populate dropdowns with team members
 function populateDropdowns() {
     const bigSelect = document.getElementById('bigName');
-    const littleSelects = document.querySelectorAll('.little-choice');
 
     // Populate World Team (Bigs) dropdown
     worldTeam.forEach(member => {
@@ -45,14 +44,49 @@ function populateDropdowns() {
         bigSelect.appendChild(option);
     });
 
-    // Populate A Team (Littles) dropdowns
-    littleSelects.forEach(select => {
+    // Initial population of all Little dropdowns
+    updateLittleDropdowns();
+}
+
+// Update Little dropdowns based on selected values
+function updateLittleDropdowns() {
+    const littleSelects = document.querySelectorAll('.little-choice');
+
+    littleSelects.forEach((select, index) => {
+        const currentValue = select.value;
+
+        // Get all selected values from previous dropdowns
+        const selectedValues = [];
+        for (let i = 0; i < index; i++) {
+            const value = littleSelects[i].value;
+            if (value && value !== '' && value !== 'NO_PREFERENCE') {
+                selectedValues.push(value);
+            }
+        }
+
+        // Clear and repopulate dropdown
+        select.innerHTML = '<option value="">-- Select --</option>';
+
+        // Add "No Preference" option for all dropdowns
+        const noPrefOption = document.createElement('option');
+        noPrefOption.value = 'NO_PREFERENCE';
+        noPrefOption.textContent = 'No Preference';
+        select.appendChild(noPrefOption);
+
+        // Add A Team members that haven't been selected yet
         aTeam.forEach(member => {
-            const option = document.createElement('option');
-            option.value = member.name;
-            option.textContent = member.name;
-            select.appendChild(option);
+            if (!selectedValues.includes(member.name)) {
+                const option = document.createElement('option');
+                option.value = member.name;
+                option.textContent = member.name;
+                select.appendChild(option);
+            }
         });
+
+        // Restore the current value if it's still valid
+        if (currentValue && (currentValue === 'NO_PREFERENCE' || !selectedValues.includes(currentValue))) {
+            select.value = currentValue;
+        }
     });
 }
 
@@ -66,12 +100,12 @@ function setupEventListeners() {
         window.location.href = 'admin.html';
     });
 
-    // Prevent selecting the same Little multiple times
+    // Handle Little dropdown changes
     const littleSelects = document.querySelectorAll('.little-choice');
     littleSelects.forEach((select, index) => {
         select.addEventListener('change', () => {
             handleNoPreference(index);
-            validateUniqueChoices();
+            updateLittleDropdowns();
         });
     });
 
@@ -131,7 +165,7 @@ function handleNoPreference(changedIndex) {
     }
 }
 
-// Validate that each Little is only selected once
+// Validate that each Little is only selected once (now handled by dropdown filtering, but kept for safety)
 function validateUniqueChoices() {
     const littleSelects = document.querySelectorAll('.little-choice');
     const selectedValues = Array.from(littleSelects)
@@ -149,11 +183,30 @@ function validateUniqueChoices() {
     return true;
 }
 
+// Validate that at least one choice is made (not just "No Preference")
+function validateAtLeastOneChoice() {
+    const littleSelects = document.querySelectorAll('.little-choice');
+    const hasRealChoice = Array.from(littleSelects).some(select => {
+        const value = select.value;
+        return value && value !== '' && value !== 'NO_PREFERENCE';
+    });
+
+    if (!hasRealChoice) {
+        alert('You must select at least one A Team member (you cannot select only "No Preference").');
+        return false;
+    }
+    return true;
+}
+
 // Handle form submission
 async function handleSubmit(e) {
     e.preventDefault();
 
     if (!validateUniqueChoices()) {
+        return;
+    }
+
+    if (!validateAtLeastOneChoice()) {
         return;
     }
 

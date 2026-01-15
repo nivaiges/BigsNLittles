@@ -119,22 +119,64 @@ function updateStatistics() {
 function displayAllPreferences() {
     const container = document.getElementById('preferencesList');
 
+    let html = '';
+
+    // Display existing matches first
+    if (existingMatches.length > 0) {
+        html += '<div class="matches-section" style="margin-bottom: 30px;">';
+        html += '<h2 style="color: #28a745; margin-bottom: 15px;">Locked Matches</h2>';
+
+        // Group matches by Big
+        const matchesByBig = {};
+        existingMatches.forEach(match => {
+            if (!matchesByBig[match.bigName]) {
+                matchesByBig[match.bigName] = [];
+            }
+            matchesByBig[match.bigName].push(match.littleName);
+        });
+
+        html += '<div class="preferences-list">';
+        Object.entries(matchesByBig).sort((a, b) => a[0].localeCompare(b[0])).forEach(([bigName, littles]) => {
+            html += `
+                <div class="preference-card" style="border-left-color: #28a745; background: #f0f9f4;">
+                    <h3>${bigName} <span style="color: #28a745; font-size: 0.8em;">(Matched)</span></h3>
+                    <ul class="choices-list" style="list-style: none; padding-left: 0;">
+                        ${littles.map(littleName => `
+                            <li style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                                <strong>Matched with:</strong> ${littleName}
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+        });
+        html += '</div>';
+        html += '</div>';
+    }
+
+    // Display preferences
     if (preferences.length === 0) {
-        container.innerHTML = '<p class="empty-state">No preferences submitted yet.</p>';
+        html += '<p class="empty-state">No preferences submitted yet.</p>';
+        container.innerHTML = html;
         return;
     }
+
+    html += '<h2 style="color: #667eea; margin-bottom: 15px;">Preference Submissions</h2>';
 
     // Sort by timestamp (most recent first)
     const sortedPrefs = [...preferences].sort((a, b) =>
         new Date(b.timestamp) - new Date(a.timestamp)
     );
 
-    let html = '<div class="preferences-list">';
+    html += '<div class="preferences-list">';
 
     sortedPrefs.forEach(pref => {
+        // Check if this Big already has a match
+        const hasMatch = existingMatches.some(match => match.bigName === pref.bigName);
+
         html += `
-            <div class="preference-card">
-                <h3>${pref.bigName}</h3>
+            <div class="preference-card ${hasMatch ? 'has-match' : ''}">
+                <h3>${pref.bigName} ${hasMatch ? '<span style="color: #28a745; font-size: 0.8em;">(Already Matched)</span>' : ''}</h3>
                 <p class="timestamp">Submitted: ${new Date(pref.timestamp).toLocaleString()}</p>
                 <ol class="choices-list">
                     ${pref.choices.map(choice => `

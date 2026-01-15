@@ -202,6 +202,14 @@ function validateAtLeastOneChoice() {
 async function handleSubmit(e) {
     e.preventDefault();
 
+    const bigName = document.getElementById('bigName').value;
+
+    // Validate that a name was selected
+    if (!bigName || bigName === '') {
+        alert('Please select your name before submitting.');
+        return;
+    }
+
     if (!validateUniqueChoices()) {
         return;
     }
@@ -209,8 +217,6 @@ async function handleSubmit(e) {
     if (!validateAtLeastOneChoice()) {
         return;
     }
-
-    const bigName = document.getElementById('bigName').value;
 
     const choices = [];
     for (let i = 1; i <= 5; i++) {

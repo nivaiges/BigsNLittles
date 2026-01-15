@@ -71,6 +71,31 @@ function setupEventListeners() {
     littleSelects.forEach(select => {
         select.addEventListener('change', validateUniqueChoices);
     });
+
+    // Secret admin access via triple-click on ampersand
+    const ampersand = document.getElementById('ampersand');
+    if (ampersand) {
+        let clickCount = 0;
+        let clickTimer = null;
+
+        ampersand.addEventListener('click', () => {
+            clickCount++;
+
+            if (clickCount === 1) {
+                clickTimer = setTimeout(() => {
+                    clickCount = 0;
+                }, 500); // Reset after 500ms
+            }
+
+            if (clickCount === 3) {
+                clearTimeout(clickTimer);
+                clickCount = 0;
+                adminBtn.classList.remove('hidden');
+                // Optional: add a subtle indication that admin mode is unlocked
+                ampersand.style.color = '#667eea';
+            }
+        });
+    }
 }
 
 // Validate that each Little is only selected once

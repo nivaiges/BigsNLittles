@@ -36,6 +36,12 @@ header h1 {
     margin-bottom: 10px;
 }
 
+#ampersand {
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.3s;
+}
+
 header p {
     font-size: 1.1em;
     opacity: 0.9;
